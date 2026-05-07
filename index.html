@@ -392,15 +392,15 @@ body { background: var(--paper); color: var(--ink); font-family: 'DM Sans', sans
   <!-- API Key -->
   <div class="apikey-card">
     <div class="apikey-head">
-      <div class="apikey-title">Google Gemini API Key</div>
+      <div class="apikey-title">OpenRouter API Key</div>
       <div class="apikey-status unset" id="keyStatus">未設定</div>
     </div>
     <div class="apikey-body">
-      <input type="password" class="apikey-input" id="apiKeyInput" placeholder="AIza..." />
+      <input type="password" class="apikey-input" id="apiKeyInput" placeholder="sk-or-v1-..." />
       <button class="apikey-btn" onclick="saveKey()">設定</button>
     </div>
     <div class="apikey-hint">
-      APIキーは <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a> で無料取得（Googleアカウントのみ・カード登録不要）。このデバイス内のみに保存されます。
+      APIキーは <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a> で無料取得（Googleアカウントでログイン・カード登録不要）。このデバイス内のみに保存されます。
     </div>
   </div>
 
@@ -493,18 +493,18 @@ function setMode(mode) {
 // ── API Key ──
 function saveKey() {
   const key = document.getElementById('apiKeyInput').value.trim();
-  if (!key || !key.startsWith('AIza')) {
-    showError('APIキーの形式が正しくありません（AIza から始まるキーを入力してください）');
+  if (!key || !key.startsWith('sk-or-')) {
+    showError('APIキーの形式が正しくありません（sk-or- から始まるキーを入力してください）');
     return;
   }
-  localStorage.setItem('gemini_key', key);
+  localStorage.setItem('openrouter_key', key);
   updateKeyStatus();
   document.getElementById('apiKeyInput').value = '';
   showToast('APIキーを設定しました ✓');
 }
 
 function getKey() {
-  return localStorage.getItem('gemini_key') || '';
+  return localStorage.getItem('openrouter_key') || '';
 }
 
 function updateKeyStatus() {
@@ -565,29 +565,32 @@ async function convert() {
 {"candidates":[{"kanji":"漢字","reading":"カタカナ読み","jp":"日本語での意味説明（1〜2文）","en":"English meaning explanation (1-2 sentences)"},{"kanji":"漢字","reading":"カタカナ読み","jp":"日本語での意味説明","en":"English meaning"},{"kanji":"漢字","reading":"カタカナ読み","jp":"日本語での意味説明","en":"English meaning"}]}`;
 
   try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${key}`,
+        'HTTP-Referer': 'https://navigatorsspc0111-maker.github.io',
+        'X-Title': '漢字変換ツール'
+      },
       body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 1024
-        }
+        model: 'meta-llama/llama-3.3-8b-instruct:free',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.7,
+        max_tokens: 1024
       })
     });
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       const code = res.status;
-      if (code === 400) throw new Error('APIキーが無効または形式が違います');
-      if (code === 403) throw new Error('APIキーの権限エラー。aistudio.google.com で確認してください');
+      if (code === 401) throw new Error('APIキーが無効です。正しいOpenRouter APIキーを設定してください');
       if (code === 429) throw new Error('リクエスト制限中。少し待ってから再試行してください');
       throw new Error(err.error?.message || `サーバーエラー (${code})`);
     }
 
     const data = await res.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const text = data.choices?.[0]?.message?.content || '';
     if (!text) throw new Error('AIからの応答が空でした。もう一度試してください');
     const clean = text.replace(/```json|```/g, '').trim();
     let parsed;
