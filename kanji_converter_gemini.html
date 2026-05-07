@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>漢字変換ツール Gemini版 / Kanji Converter AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;600;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --ink: #1a1714;
+  --ink-light: #6b6560;
+  --ink-faint: #b0aba6;
+  --paper: #faf8f4;
+  --paper-warm: #f2ede4;
+  --paper-card: #ffffff;
+  --red: #c0392b;
+  --red-light: #fdf0ee;
+  --blue: #1a4a7a;
+  --blue-light: #eaf1f9;
+  --pink: #9e3a6b;
+  --pink-light: #fceef5;
+  --gold: #8a6a1a;
+  --gold-light: #fdf6e3;
+  --green: #2a6b3a;
+  --green-light: #edf6ef;
+  --border: rgba(26,23,20,0.1);
+  --shadow: 0 2px 24px rgba(26,23,20,0.09);
+  --radius: 14px;
+  --radius-sm: 9px;
+}
+html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+body { background: var(--paper); color: var(--ink); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+
+/* Header */
+.header {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 16px 20px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 3px solid var(--red);
+}
+.header-left { display: flex; flex-direction: column; }
+.header-title { font-family: 'Shippori Mincho B1', serif; font-size: 18px; font-weight: 800; letter-spacing: 0.02em; }
+.header-sub { font-size: 10px; opacity: 0.5; letter-spacing: 0.1em; margin-top: 2px; text-transform: uppercase; }
+.ai-badge {
+  display: flex; align-items: center; gap: 5px;
+  background: var(--red); color: white;
+  font-size: 11px; font-weight: 600;
+  padding: 4px 10px; border-radius: 20px;
+  letter-spacing: 0.04em;
+}
+.ai-dot { width: 6px; height: 6px; background: #fff; border-radius: 50%; animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+/* Main */
+.main { max-width: 640px; margin: 0 auto; padding: 22px 16px 72px; }
+
+/* API Key section */
+.apikey-card {
+  background: var(--paper-card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.apikey-head {
+  background: var(--paper-warm);
+  padding: 11px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+.apikey-title { font-size: 12px; font-weight: 600; color: var(--ink-light); letter-spacing: 0.06em; text-transform: uppercase; }
+.apikey-status { font-size: 11px; padding: 2px 8px; border-radius: 12px; }
+.apikey-status.set { background: var(--green-light); color: var(--green); }
+.apikey-status.unset { background: var(--red-light); color: var(--red); }
+.apikey-body { padding: 13px 16px; display: flex; gap: 8px; }
+.apikey-input {
+  flex: 1;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+  padding: 11px 14px;
+  font-size: 13px;
+  font-family: monospace;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.16s;
+  -webkit-appearance: none;
+}
+.apikey-input::placeholder { color: var(--ink-faint); font-family: 'DM Sans', sans-serif; font-size: 12px; }
+.apikey-input:focus { border-color: var(--red); }
+.apikey-btn {
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--ink);
+  color: white;
+  padding: 11px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.16s;
+  -webkit-tap-highlight-color: transparent;
+}
+.apikey-btn:active { background: #333; transform: scale(0.97); }
+.apikey-hint { padding: 0 16px 12px; font-size: 11px; color: var(--ink-faint); line-height: 1.6; }
+.apikey-hint a { color: var(--blue); text-decoration: none; }
+
+/* Mode btn */
+.mode-btn {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--paper-card);
+  padding: 12px 6px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--ink-light);
+  text-align: center;
+  transition: all 0.16s;
+  -webkit-tap-highlight-color: transparent;
+  line-height: 1.4;
+}
+.mode-btn.active { border-color: var(--red); background: var(--red-light); color: var(--red); font-weight: 600; }
+.mode-btn:active { transform: scale(0.97); }
+
+/* Sec label */
+.sec-label { font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 9px; }
+
+/* Gender */
+.gender-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+.g-btn {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--paper-card);
+  padding: 12px 6px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--ink-light);
+  text-align: center;
+  transition: all 0.16s;
+  -webkit-tap-highlight-color: transparent;
+}
+.g-btn span { display: block; font-size: 20px; margin-bottom: 3px; }
+.g-btn:active { transform: scale(0.97); }
+.g-btn.active-m { border-color: var(--blue); background: var(--blue-light); color: var(--blue); font-weight: 600; }
+.g-btn.active-f { border-color: var(--pink); background: var(--pink-light); color: var(--pink); font-weight: 600; }
+.g-btn.active-n { border-color: var(--gold); background: var(--gold-light); color: var(--gold); font-weight: 600; }
+
+/* Search */
+.search-wrap { display: flex; gap: 9px; margin-bottom: 22px; }
+.search-input {
+  flex: 1;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--paper-card);
+  padding: 14px 16px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.16s;
+  -webkit-appearance: none;
+}
+.search-input::placeholder { color: var(--ink-faint); }
+.search-input:focus { border-color: var(--red); }
+.search-btn {
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--red);
+  color: white;
+  padding: 14px 20px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.16s;
+  -webkit-tap-highlight-color: transparent;
+  min-width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.search-btn:active { transform: scale(0.97); background: #a32b20; }
+.search-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+/* Loading */
+.loading-card {
+  background: var(--paper-card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 36px 20px;
+  text-align: center;
+  margin-bottom: 20px;
+  animation: fadeUp 0.25s ease;
+}
+.loading-kanji {
+  font-family: 'Shippori Mincho B1', serif;
+  font-size: 48px;
+  font-weight: 800;
+  color: var(--ink);
+  opacity: 0.12;
+  animation: flicker 1.2s infinite;
+  letter-spacing: 8px;
+}
+@keyframes flicker { 0%,100%{opacity:0.12;} 50%{opacity:0.35;} }
+.loading-text { font-size: 13px; color: var(--ink-faint); margin-top: 12px; letter-spacing: 0.04em; }
+
+/* Result card */
+.result-card {
+  background: var(--paper-card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  margin-bottom: 20px;
+  animation: fadeUp 0.3s ease;
+}
+@keyframes fadeUp { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
+.result-head {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.result-name { font-family: 'Shippori Mincho B1', serif; font-size: 14px; opacity: 0.65; }
+.result-tag { font-size: 11px; padding: 3px 9px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.22); opacity: 0.8; }
+.result-main {
+  text-align: center;
+  padding: 22px 20px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.big-kanji {
+  font-family: 'Shippori Mincho B1', serif;
+  font-size: clamp(42px, 10vw, 62px);
+  font-weight: 800;
+  letter-spacing: 8px;
+  color: var(--ink);
+  line-height: 1.1;
+  transition: all 0.22s ease;
+}
+.selected-hint { font-size: 11px; color: var(--ink-faint); margin-top: 7px; letter-spacing: 0.07em; }
+
+/* Candidates */
+.cands-wrap { padding: 14px 14px 6px; }
+.cands-label { font-size: 11px; font-weight: 500; color: var(--ink-faint); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 9px; }
+.candidate {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 13px;
+  margin-bottom: 9px;
+  cursor: pointer;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.candidate:active { transform: scale(0.99); }
+.candidate.selected { border-color: var(--red); background: var(--red-light); }
+.candidate.selected .cand-kanji { color: var(--red); }
+.cand-top { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+.cand-kanji { font-family: 'Shippori Mincho B1', serif; font-size: 24px; font-weight: 700; letter-spacing: 3px; color: var(--ink); flex-shrink: 0; }
+.cand-read { font-size: 11px; color: var(--ink-faint); letter-spacing: 0.05em; }
+.safe-badge { margin-left: auto; font-size: 11px; padding: 3px 8px; border-radius: 16px; background: var(--green-light); color: var(--green); font-weight: 600; flex-shrink: 0; }
+.cand-descs { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+@media(max-width:400px) { .cand-descs { grid-template-columns: 1fr; } }
+.desc-box { background: var(--paper); border-radius: 7px; padding: 8px 10px; }
+.desc-lang { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 3px; }
+.desc-text { font-size: 12px; color: var(--ink-light); line-height: 1.65; }
+
+/* Copy btn */
+.copy-wrap { padding: 0 14px 14px; }
+.copy-btn {
+  width: 100%;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--paper-card);
+  padding: 13px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--ink-light);
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  -webkit-tap-highlight-color: transparent;
+}
+.copy-btn:active { background: var(--paper); transform: scale(0.98); }
+.copy-btn.copied { border-color: var(--green); color: var(--green); background: var(--green-light); }
+
+/* Error */
+.error-card {
+  background: var(--red-light);
+  border: 1.5px solid rgba(192,57,43,0.2);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  color: var(--red);
+  line-height: 1.6;
+  animation: fadeUp 0.25s ease;
+}
+
+/* History */
+.history-card {
+  background: var(--paper-card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.history-head {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-faint);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.clear-btn { font-size: 11px; color: var(--red); background: none; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; padding: 0; }
+.history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.13s;
+  -webkit-tap-highlight-color: transparent;
+}
+.history-item:last-child { border-bottom: none; }
+.history-item:active { background: var(--paper); }
+.h-left { display: flex; flex-direction: column; }
+.h-name { font-size: 13px; color: var(--ink-light); }
+.h-g { font-size: 11px; color: var(--ink-faint); margin-top: 2px; }
+.h-kanji { font-family: 'Shippori Mincho B1', serif; font-size: 22px; letter-spacing: 3px; font-weight: 700; color: var(--ink); }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--ink);
+  color: var(--paper);
+  padding: 11px 22px;
+  border-radius: 28px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: transform 0.28s ease;
+  z-index: 999;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* Spinner */
+.spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="header-title">漢字変換ツール</div>
+    <div class="header-sub">AI-Powered · 浅草</div>
+  </div>
+  <div class="ai-badge"><div class="ai-dot"></div>AI</div>
+</div>
+
+<div class="main">
+
+  <!-- API Key -->
+  <div class="apikey-card">
+    <div class="apikey-head">
+      <div class="apikey-title">Google Gemini API Key</div>
+      <div class="apikey-status unset" id="keyStatus">未設定</div>
+    </div>
+    <div class="apikey-body">
+      <input type="password" class="apikey-input" id="apiKeyInput" placeholder="AIza..." />
+      <button class="apikey-btn" onclick="saveKey()">設定</button>
+    </div>
+    <div class="apikey-hint">
+      APIキーは <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a> で無料取得（Googleアカウントのみ・カード登録不要）。このデバイス内のみに保存されます。
+    </div>
+  </div>
+
+  <!-- Gender -->
+  <div class="sec-label">性別 / Gender</div>
+  <div class="gender-row">
+    <button class="g-btn active-m" id="gm" onclick="setGender('m')">
+      <span>♂</span>男性<br><small style="font-size:11px;opacity:0.65;">Male</small>
+    </button>
+    <button class="g-btn" id="gf" onclick="setGender('f')">
+      <span>♀</span>女性<br><small style="font-size:11px;opacity:0.65;">Female</small>
+    </button>
+    <button class="g-btn" id="gn" onclick="setGender('n')">
+      <span>✦</span>どちらでも<br><small style="font-size:11px;opacity:0.65;">Any</small>
+    </button>
+  </div>
+
+  <!-- Input mode toggle -->
+  <div class="sec-label">入力方式 / Input Mode</div>
+  <div class="mode-row" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+    <button class="mode-btn active" id="modeRoma" onclick="setMode('roma')">
+      <span style="font-size:15px;display:block;margin-bottom:2px;">Aa</span>
+      ローマ字<br><small style="font-size:10px;opacity:0.65;">Romaji</small>
+    </button>
+    <button class="mode-btn" id="modeKana" onclick="setMode('kana')">
+      <span style="font-size:15px;display:block;margin-bottom:2px;">カナ</span>
+      カタカナ<br><small style="font-size:10px;opacity:0.65;">Katakana</small>
+    </button>
+  </div>
+
+  <!-- Search -->
+  <div class="sec-label">名前を入力 / Enter Name</div>
+  <div class="input-hint" id="inputHint" style="font-size:12px;color:var(--ink-faint);margin-bottom:8px;line-height:1.6;">
+    ローマ字で入力してください（例: Alex, Maria, Lucas）
+  </div>
+  <div class="search-wrap">
+    <input type="text" class="search-input" id="nameInput"
+      placeholder="例: Alex, Emma, Maria ..."
+      autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+    <button class="search-btn" id="searchBtn" onclick="convert()">
+      <span id="btnText">変換</span>
+    </button>
+  </div>
+
+  <div id="resultArea"></div>
+
+  <div id="historyArea" style="display:none">
+    <div class="sec-label">本日の変換履歴 / Today's History</div>
+    <div class="history-card">
+      <div class="history-head">
+        <span>履歴 HISTORY</span>
+        <button class="clear-btn" onclick="clearHistory()">クリア</button>
+      </div>
+      <div id="historyList"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast">コピーしました ✓</div>
+
+<script>
+// ── State ──
+let gender = 'm';
+let inputMode = 'roma';
+let history = [];
+let selectedKanjis = {};
+let isLoading = false;
+
+// ── Input Mode ──
+function setMode(mode) {
+  inputMode = mode;
+  document.getElementById('modeRoma').className = 'mode-btn' + (mode==='roma'?' active':'');
+  document.getElementById('modeKana').className = 'mode-btn' + (mode==='kana'?' active':'');
+  const input = document.getElementById('nameInput');
+  const hint = document.getElementById('inputHint');
+  if (mode === 'roma') {
+    input.placeholder = '例: Alex, Emma, Maria ...';
+    input.setAttribute('autocapitalize', 'off');
+    hint.textContent = 'ローマ字で入力してください（例: Alex, Maria, Lucas）';
+  } else {
+    input.placeholder = '例: アレックス, エマ, マリア ...';
+    input.setAttribute('autocapitalize', 'none');
+    hint.textContent = 'カタカナで入力してください（例: マリア, ルーカス, エマ）— 音が正確になりより精度が上がります';
+  }
+  input.value = '';
+  input.focus();
+}
+
+// ── API Key ──
+function saveKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key || !key.startsWith('AIza')) {
+    showError('APIキーの形式が正しくありません（AIza から始まるキーを入力してください）');
+    return;
+  }
+  localStorage.setItem('gemini_key', key);
+  updateKeyStatus();
+  document.getElementById('apiKeyInput').value = '';
+  showToast('APIキーを設定しました ✓');
+}
+
+function getKey() {
+  return localStorage.getItem('gemini_key') || '';
+}
+
+function updateKeyStatus() {
+  const key = getKey();
+  const el = document.getElementById('keyStatus');
+  if (key) {
+    el.textContent = '設定済み ✓';
+    el.className = 'apikey-status set';
+  } else {
+    el.textContent = '未設定';
+    el.className = 'apikey-status unset';
+  }
+}
+
+// ── Gender ──
+function setGender(g) {
+  gender = g;
+  document.getElementById('gm').className = 'g-btn' + (g==='m'?' active-m':'');
+  document.getElementById('gf').className = 'g-btn' + (g==='f'?' active-f':'');
+  document.getElementById('gn').className = 'g-btn' + (g==='n'?' active-n':'');
+}
+
+// ── Convert ──
+async function convert() {
+  if (isLoading) return;
+  const raw = document.getElementById('nameInput').value.trim();
+  if (!raw) return;
+  const key = getKey();
+  if (!key) {
+    showError('先にAPIキーを設定してください。');
+    return;
+  }
+
+  setLoading(true);
+  document.getElementById('resultArea').innerHTML = renderLoading(raw);
+  document.getElementById('nameInput').blur();
+
+  const gWord = gender==='m'?'male（男性）':gender==='f'?'female（女性）':'gender-neutral（性別問わず）';
+
+  const isKana = inputMode === 'kana';
+  const inputDesc = isKana
+    ? `カタカナ表記「${raw}」（この音をそのまま漢字に変換してください）`
+    : `ローマ字表記「${raw}」（一般的な読み方で漢字に変換してください）`;
+
+  const prompt = `外国人の名前を日本語の漢字に音を当てて変換してください。
+
+入力: ${inputDesc}
+性別: ${gWord}
+
+以下の条件を厳守してください：
+- ${isKana ? 'カタカナの音を忠実に漢字に当てる（音の再現を最優先）' : 'ローマ字の一般的な読み方を漢字に当てる'}
+- 縁起が良く、ポジティブで美しい意味の漢字のみ使用
+- 下品・不吉・ネガティブ・暴力的・侮辱的な意味の漢字は絶対に使わない
+- 各候補は異なる漢字の組み合わせにする
+- 3つの候補を提案する
+
+必ず以下のJSON形式のみで返してください（説明文・コードブロック・バッククォートは不要）：
+{"candidates":[{"kanji":"漢字","reading":"カタカナ読み","jp":"日本語での意味説明（1〜2文）","en":"English meaning explanation (1-2 sentences)"},{"kanji":"漢字","reading":"カタカナ読み","jp":"日本語での意味説明","en":"English meaning"},{"kanji":"漢字","reading":"カタカナ読み","jp":"日本語での意味説明","en":"English meaning"}]}`;
+
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${key}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 1024,
+          responseMimeType: 'application/json'
+        }
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const code = res.status;
+      if (code === 400) throw new Error('APIキーが無効または形式が違います');
+      if (code === 403) throw new Error('APIキーの権限エラー。aistudio.google.com で確認してください');
+      if (code === 429) throw new Error('リクエスト制限中。少し待ってから再試行してください');
+      throw new Error(err.error?.message || `サーバーエラー (${code})`);
+    }
+
+    const data = await res.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (!text) throw new Error('AIからの応答が空でした。もう一度試してください');
+    const clean = text.replace(/```json|```/g, '').trim();
+    let parsed;
+    try { parsed = JSON.parse(clean); }
+    catch { throw new Error('AIの応答を解析できませんでした。もう一度試してください'); }
+
+    if (!parsed.candidates || parsed.candidates.length === 0) {
+      throw new Error('変換結果が取得できませんでした');
+    }
+
+    const gLabel = gender==='m'?'男性 Male':gender==='f'?'女性 Female':'どちらでも Any';
+    selectedKanjis[raw] = parsed.candidates[0].kanji;
+    document.getElementById('resultArea').innerHTML = renderResult(raw, parsed.candidates, gLabel);
+    updateHistory(raw, parsed.candidates[0].kanji);
+
+  } catch (e) {
+    let msg = e.message || '不明なエラー';
+    if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('Load failed')) {
+      msg = 'ネットワークエラーです。インターネット接続を確認してください。';
+    }
+    document.getElementById('resultArea').innerHTML = `<div class="error-card">⚠️ ${msg}</div>`;
+  } finally {
+    setLoading(false);
+  }
+}
+
+// ── Render ──
+function renderLoading(name) {
+  return `<div class="loading-card">
+    <div class="loading-kanji">漢字</div>
+    <div class="loading-text">「${name}」を変換中... AIが最適な漢字を選んでいます</div>
+  </div>`;
+}
+
+function renderResult(name, candidates, gLabel) {
+  const cands = candidates.map((c, i) => `
+    <div class="candidate ${i===0?'selected':''}" onclick="selectKanji('${name}',${i},this)" data-kanji="${c.kanji}">
+      <div class="cand-top">
+        <div>
+          <div class="cand-kanji">${c.kanji}</div>
+          <div class="cand-read">${c.reading||''}</div>
+        </div>
+        <div class="safe-badge">✓ 安全</div>
+      </div>
+      <div class="cand-descs">
+        <div class="desc-box">
+          <div class="desc-lang">日本語</div>
+          <div class="desc-text">${c.jp}</div>
+        </div>
+        <div class="desc-box">
+          <div class="desc-lang">English</div>
+          <div class="desc-text">${c.en}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  return `<div class="result-card">
+    <div class="result-head">
+      <div class="result-name">${name}</div>
+      <div class="result-tag">${gLabel}</div>
+    </div>
+    <div class="result-main">
+      <div class="big-kanji" id="mainKanji_${name}">${candidates[0].kanji}</div>
+      <div class="selected-hint">選択中 / Selected</div>
+    </div>
+    <div class="cands-wrap">
+      <div class="cands-label">候補を選択 / Choose a candidate</div>
+      ${cands}
+    </div>
+    <div class="copy-wrap">
+      <button class="copy-btn" id="copyBtn_${name}" onclick="copyKanji('${name}')">
+        <span id="copyTxt_${name}">コピー</span>
+        <span style="font-size:11px;opacity:0.55;">/ Copy to clipboard</span>
+      </button>
+    </div>
+  </div>`;
+}
+
+function selectKanji(name, idx, el) {
+  const kanji = el.dataset.kanji;
+  selectedKanjis[name] = kanji;
+  const mainEl = document.getElementById('mainKanji_'+name);
+  if (mainEl) mainEl.textContent = kanji;
+  el.closest('.cands-wrap').querySelectorAll('.candidate').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  updateHistory(name, kanji);
+}
+
+function copyKanji(name) {
+  const k = selectedKanjis[name] || '';
+  const btn = document.getElementById('copyBtn_'+name);
+  const txt = document.getElementById('copyTxt_'+name);
+  navigator.clipboard.writeText(k).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = k; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+  });
+  if (btn) btn.classList.add('copied');
+  if (txt) txt.textContent = 'コピーしました！';
+  showToast('コピーしました ✓');
+  setTimeout(() => {
+    if (btn) btn.classList.remove('copied');
+    if (txt) txt.textContent = 'コピー';
+  }, 2200);
+}
+
+function showError(msg) {
+  document.getElementById('resultArea').innerHTML = `<div class="error-card">⚠️ ${msg}</div>`;
+}
+
+// ── History ──
+function updateHistory(name, kanji) {
+  const g = gender==='m'?'♂ 男性':gender==='f'?'♀ 女性':'✦ どちらでも';
+  const i = history.findIndex(h => h.name===name);
+  if (i>=0) history[i] = {name,kanji,g};
+  else history.unshift({name,kanji,g});
+  if (history.length>30) history = history.slice(0,30);
+  renderHistory();
+}
+
+function clearHistory() { history = []; renderHistory(); }
+
+function renderHistory() {
+  const area = document.getElementById('historyArea');
+  const list = document.getElementById('historyList');
+  if (!history.length) { area.style.display='none'; return; }
+  area.style.display = 'block';
+  list.innerHTML = history.map(h => `
+    <div class="history-item" onclick="refill('${h.name}')">
+      <div class="h-left">
+        <div class="h-name">${h.name}</div>
+        <div class="h-g">${h.g}</div>
+      </div>
+      <div class="h-kanji">${h.kanji}</div>
+    </div>
+  `).join('');
+}
+
+function refill(name) {
+  document.getElementById('nameInput').value = name;
+  window.scrollTo({top:0,behavior:'smooth'});
+  convert();
+}
+
+// ── UI helpers ──
+function setLoading(on) {
+  isLoading = on;
+  const btn = document.getElementById('searchBtn');
+  const txt = document.getElementById('btnText');
+  if (on) {
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div>';
+  } else {
+    btn.disabled = false;
+    btn.innerHTML = '<span id="btnText">変換</span>';
+  }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+// ── Init ──
+updateKeyStatus();
+document.getElementById('nameInput').addEventListener('keydown', e => {
+  if (e.key==='Enter') convert();
+});
+document.getElementById('apiKeyInput').addEventListener('keydown', e => {
+  if (e.key==='Enter') saveKey();
+});
+</script>
+</body>
+</html>
