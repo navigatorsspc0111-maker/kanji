@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>漢字変換ツール Gemini版 / Kanji Converter AI</title>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;600;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -32,7 +33,6 @@
 html { font-size: 16px; -webkit-text-size-adjust: 100%; }
 body { background: var(--paper); color: var(--ink); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
 
-/* Header */
 .header {
   background: var(--ink);
   color: var(--paper);
@@ -58,10 +58,8 @@ body { background: var(--paper); color: var(--ink); font-family: 'DM Sans', sans
 .ai-dot { width: 6px; height: 6px; background: #fff; border-radius: 50%; animation: pulse 1.5s infinite; }
 @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
 
-/* Main */
 .main { max-width: 640px; margin: 0 auto; padding: 22px 16px 72px; }
 
-/* API Key section */
 .apikey-card {
   background: var(--paper-card);
   border: 1.5px solid var(--border);
@@ -115,7 +113,6 @@ body { background: var(--paper); color: var(--ink); font-family: 'DM Sans', sans
 .apikey-hint { padding: 0 16px 12px; font-size: 11px; color: var(--ink-faint); line-height: 1.6; }
 .apikey-hint a { color: var(--blue); text-decoration: none; }
 
-/* Mode btn */
 .mode-btn {
   border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
@@ -133,10 +130,8 @@ body { background: var(--paper); color: var(--ink); font-family: 'DM Sans', sans
 .mode-btn.active { border-color: var(--red); background: var(--red-light); color: var(--red); font-weight: 600; }
 .mode-btn:active { transform: scale(0.97); }
 
-/* Sec label */
 .sec-label { font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 9px; }
 
-/* Gender */
 .gender-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 20px; }
 .g-btn {
   border: 1.5px solid var(--border);
@@ -157,7 +152,6 @@ body { background: var(--paper); color: var(--ink); font-family: 'DM Sans', sans
 .g-btn.active-f { border-color: var(--pink); background: var(--pink-light); color: var(--pink); font-weight: 600; }
 .g-btn.active-n { border-color: var(--gold); background: var(--gold-light); color: var(--gold); font-weight: 600; }
 
-/* Search */
 .search-wrap { display: flex; gap: 9px; margin-bottom: 22px; }
 .search-input {
   flex: 1;
@@ -196,7 +190,6 @@ body { background: var(--paper); color: var(--ink); font-family: 'DM Sans', sans
 .search-btn:active { transform: scale(0.97); background: #a32b20; }
 .search-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-/* Loading */
 .loading-card {
   background: var(--paper-card);
   border-radius: var(--radius);
@@ -218,7 +211,6 @@ body { background: var(--paper); color: var(--ink); font-family: 'DM Sans', sans
 @keyframes flicker { 0%,100%{opacity:0.12;} 50%{opacity:0.35;} }
 .loading-text { font-size: 13px; color: var(--ink-faint); margin-top: 12px; letter-spacing: 0.04em; }
 
-/* Result card */
 .result-card {
   background: var(--paper-card);
   border-radius: var(--radius);
@@ -255,7 +247,6 @@ body { background: var(--paper); color: var(--ink); font-family: 'DM Sans', sans
 }
 .selected-hint { font-size: 11px; color: var(--ink-faint); margin-top: 7px; letter-spacing: 0.07em; }
 
-/* Candidates */
 .cands-wrap { padding: 14px 14px 6px; }
 .cands-label { font-size: 11px; font-weight: 500; color: var(--ink-faint); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 9px; }
 .candidate {
@@ -280,8 +271,8 @@ body { background: var(--paper); color: var(--ink); font-family: 'DM Sans', sans
 .desc-lang { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 3px; }
 .desc-text { font-size: 12px; color: var(--ink-light); line-height: 1.65; }
 
-/* Copy btn */
-.copy-wrap { padding: 0 14px 14px; }
+/* Action buttons area */
+.action-wrap { padding: 0 14px 14px; display: flex; flex-direction: column; gap: 9px; }
 .copy-btn {
   width: 100%;
   border: 1.5px solid var(--border);
@@ -302,7 +293,28 @@ body { background: var(--paper); color: var(--ink); font-family: 'DM Sans', sans
 .copy-btn:active { background: var(--paper); transform: scale(0.98); }
 .copy-btn.copied { border-color: var(--green); color: var(--green); background: var(--green-light); }
 
-/* Error */
+/* PDF button */
+.pdf-btn {
+  width: 100%;
+  border: 1.5px solid var(--red);
+  border-radius: var(--radius-sm);
+  background: var(--red);
+  padding: 13px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  -webkit-tap-highlight-color: transparent;
+}
+.pdf-btn:active { background: #a32b20; border-color: #a32b20; transform: scale(0.98); }
+.pdf-btn svg { flex-shrink: 0; }
+
 .error-card {
   background: var(--red-light);
   border: 1.5px solid rgba(192,57,43,0.2);
@@ -315,7 +327,6 @@ body { background: var(--paper); color: var(--ink); font-family: 'DM Sans', sans
   animation: fadeUp 0.25s ease;
 }
 
-/* History */
 .history-card {
   background: var(--paper-card);
   border-radius: var(--radius);
@@ -353,7 +364,6 @@ body { background: var(--paper); color: var(--ink); font-family: 'DM Sans', sans
 .h-g { font-size: 11px; color: var(--ink-faint); margin-top: 2px; }
 .h-kanji { font-family: 'Shippori Mincho B1', serif; font-size: 22px; letter-spacing: 3px; font-weight: 700; color: var(--ink); }
 
-/* Toast */
 .toast {
   position: fixed;
   bottom: 28px;
@@ -372,7 +382,6 @@ body { background: var(--paper); color: var(--ink); font-family: 'DM Sans', sans
 }
 .toast.show { transform: translateX(-50%) translateY(0); }
 
-/* Spinner */
 .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>
@@ -389,7 +398,6 @@ body { background: var(--paper); color: var(--ink); font-family: 'DM Sans', sans
 
 <div class="main">
 
-  <!-- API Key -->
   <div class="apikey-card">
     <div class="apikey-head">
       <div class="apikey-title">OpenRouter API Key</div>
@@ -404,7 +412,6 @@ body { background: var(--paper); color: var(--ink); font-family: 'DM Sans', sans
     </div>
   </div>
 
-  <!-- Gender -->
   <div class="sec-label">性別 / Gender</div>
   <div class="gender-row">
     <button class="g-btn active-m" id="gm" onclick="setGender('m')">
@@ -418,7 +425,6 @@ body { background: var(--paper); color: var(--ink); font-family: 'DM Sans', sans
     </button>
   </div>
 
-  <!-- Input mode toggle -->
   <div class="sec-label">入力方式 / Input Mode</div>
   <div class="mode-row" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
     <button class="mode-btn active" id="modeRoma" onclick="setMode('roma')">
@@ -431,7 +437,6 @@ body { background: var(--paper); color: var(--ink); font-family: 'DM Sans', sans
     </button>
   </div>
 
-  <!-- Search -->
   <div class="sec-label">名前を入力 / Enter Name</div>
   <div class="input-hint" id="inputHint" style="font-size:12px;color:var(--ink-faint);margin-bottom:8px;line-height:1.6;">
     ローマ字で入力してください（例: Alex, Maria, Lucas）
@@ -468,6 +473,7 @@ let gender = 'm';
 let inputMode = 'roma';
 let history = [];
 let selectedKanjis = {};
+let selectedCandidates = {}; // 選択中の候補データを保持
 let isLoading = false;
 
 // ── Input Mode ──
@@ -543,7 +549,6 @@ async function convert() {
   document.getElementById('nameInput').blur();
 
   const gWord = gender==='m'?'male（男性）':gender==='f'?'female（女性）':'gender-neutral（性別問わず）';
-
   const isKana = inputMode === 'kana';
   const inputDesc = isKana
     ? `カタカナ表記「${raw}」（この音をそのまま漢字に変換してください）`
@@ -603,6 +608,7 @@ async function convert() {
 
     const gLabel = gender==='m'?'男性 Male':gender==='f'?'女性 Female':'どちらでも Any';
     selectedKanjis[raw] = parsed.candidates[0].kanji;
+    selectedCandidates[raw] = parsed.candidates[0]; // 最初の候補を保持
     document.getElementById('resultArea').innerHTML = renderResult(raw, parsed.candidates, gLabel);
     updateHistory(raw, parsed.candidates[0].kanji);
 
@@ -626,8 +632,9 @@ function renderLoading(name) {
 }
 
 function renderResult(name, candidates, gLabel) {
+  const nameId = encodeURIComponent(name);
   const cands = candidates.map((c, i) => `
-    <div class="candidate ${i===0?'selected':''}" onclick="selectKanji('${name}',${i},this)" data-kanji="${c.kanji}">
+    <div class="candidate ${i===0?'selected':''}" onclick="selectKanji('${name}',${i},this,'${encodeURIComponent(JSON.stringify(c))}')" data-kanji="${c.kanji}">
       <div class="cand-top">
         <div>
           <div class="cand-kanji">${c.kanji}</div>
@@ -654,26 +661,43 @@ function renderResult(name, candidates, gLabel) {
       <div class="result-tag">${gLabel}</div>
     </div>
     <div class="result-main">
-      <div class="big-kanji" id="mainKanji_${name}">${candidates[0].kanji}</div>
+      <div class="big-kanji" id="mainKanji_${nameId}">${candidates[0].kanji}</div>
       <div class="selected-hint">選択中 / Selected</div>
     </div>
     <div class="cands-wrap">
       <div class="cands-label">候補を選択 / Choose a candidate</div>
       ${cands}
     </div>
-    <div class="copy-wrap">
-      <button class="copy-btn" id="copyBtn_${name}" onclick="copyKanji('${name}')">
-        <span id="copyTxt_${name}">コピー</span>
+    <div class="action-wrap">
+      <button class="copy-btn" id="copyBtn_${nameId}" onclick="copyKanji('${name}')">
+        <span id="copyTxt_${nameId}">コピー</span>
         <span style="font-size:11px;opacity:0.55;">/ Copy to clipboard</span>
+      </button>
+      <button class="pdf-btn" onclick="exportPDF('${name}')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="12" y1="18" x2="12" y2="12"/>
+          <line x1="9" y1="15" x2="15" y2="15"/>
+        </svg>
+        PDFで保存 / Save as PDF
       </button>
     </div>
   </div>`;
 }
 
-function selectKanji(name, idx, el) {
+function selectKanji(name, idx, el, encodedCand) {
   const kanji = el.dataset.kanji;
   selectedKanjis[name] = kanji;
-  const mainEl = document.getElementById('mainKanji_'+name);
+
+  // 候補データを更新
+  try {
+    const cand = JSON.parse(decodeURIComponent(encodedCand));
+    selectedCandidates[name] = cand;
+  } catch(e) {}
+
+  const nameId = encodeURIComponent(name);
+  const mainEl = document.getElementById('mainKanji_'+nameId);
   if (mainEl) mainEl.textContent = kanji;
   el.closest('.cands-wrap').querySelectorAll('.candidate').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
@@ -682,8 +706,9 @@ function selectKanji(name, idx, el) {
 
 function copyKanji(name) {
   const k = selectedKanjis[name] || '';
-  const btn = document.getElementById('copyBtn_'+name);
-  const txt = document.getElementById('copyTxt_'+name);
+  const nameId = encodeURIComponent(name);
+  const btn = document.getElementById('copyBtn_'+nameId);
+  const txt = document.getElementById('copyTxt_'+nameId);
   navigator.clipboard.writeText(k).catch(() => {
     const ta = document.createElement('textarea');
     ta.value = k; document.body.appendChild(ta); ta.select();
@@ -696,6 +721,184 @@ function copyKanji(name) {
     if (btn) btn.classList.remove('copied');
     if (txt) txt.textContent = 'コピー';
   }, 2200);
+}
+
+// ── PDF Export ──
+function wrapText(doc, text, x, maxWidth, lineHeight) {
+  const lines = doc.splitTextToSize(text, maxWidth);
+  return lines;
+}
+
+function exportPDF(name) {
+  const cand = selectedCandidates[name];
+  const kanji = selectedKanjis[name];
+  if (!cand || !kanji) return;
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+  const W = 210, H = 297;
+  const margin = 20;
+  const contentW = W - margin * 2;
+
+  // 背景
+  doc.setFillColor(250, 248, 244);
+  doc.rect(0, 0, W, H, 'F');
+
+  // ヘッダー背景
+  doc.setFillColor(26, 23, 20);
+  doc.rect(0, 0, W, 42, 'F');
+
+  // ヘッダー赤ライン
+  doc.setFillColor(192, 57, 43);
+  doc.rect(0, 42, W, 2.5, 'F');
+
+  // ヘッダーテキスト
+  doc.setTextColor(250, 248, 244);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.text('KANJI CONVERTER AI  ·  ASAKUSA, TOKYO', margin, 18);
+
+  doc.setFontSize(7);
+  doc.setTextColor(180, 170, 160);
+  doc.text('Your Japanese Kanji Name Certificate', margin, 26);
+
+  // 右上：日付
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+  doc.setFontSize(7);
+  doc.setTextColor(150, 140, 130);
+  doc.text(dateStr, W - margin, 26, { align: 'right' });
+
+  // 入力名
+  doc.setTextColor(200, 190, 180);
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.text('NAME / 名前', margin, 36);
+  doc.setTextColor(250, 248, 244);
+  doc.setFontSize(13);
+  doc.setFont('helvetica', 'bold');
+  doc.text(name.toUpperCase(), margin + 28, 36);
+
+  // メインカード背景
+  doc.setFillColor(255, 255, 255);
+  doc.roundedRect(margin, 52, contentW, 88, 4, 4, 'F');
+  doc.setDrawColor(220, 215, 210);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(margin, 52, contentW, 88, 4, 4, 'S');
+
+  // 漢字大表示エリア（左側）
+  doc.setFillColor(250, 248, 244);
+  doc.roundedRect(margin + 4, 57, 52, 78, 3, 3, 'F');
+
+  // 漢字ラベル
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(176, 171, 166);
+  doc.text('KANJI', margin + 30, 64, { align: 'center' });
+
+  // 漢字（大きく中央）
+  // jsPDFは日本語フォントを内蔵していないため、
+  // 漢字はボックス内に大きく枠で表現し、テキストで表示
+  doc.setFontSize(36);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(26, 23, 20);
+  // 漢字文字数に応じてサイズ調整
+  const kanjiLen = kanji.length;
+  const kFontSize = kanjiLen <= 2 ? 36 : kanjiLen <= 3 ? 28 : 22;
+  doc.setFontSize(kFontSize);
+  doc.text(kanji, margin + 30, 110, { align: 'center' });
+
+  // 読み
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(176, 171, 166);
+  doc.text(cand.reading || '', margin + 30, 126, { align: 'center' });
+
+  // 右側：意味エリア
+  const rightX = margin + 62;
+  const rightW = contentW - 66;
+
+  // 区切り線
+  doc.setDrawColor(220, 215, 210);
+  doc.setLineWidth(0.3);
+  doc.line(margin + 58, 60, margin + 58, 132);
+
+  // 意味ラベル（日本語）
+  doc.setFillColor(242, 237, 228);
+  doc.roundedRect(rightX, 59, rightW, 5.5, 1, 1, 'F');
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(107, 101, 96);
+  doc.text('MEANING IN JAPANESE', rightX + rightW / 2, 63, { align: 'center' });
+
+  // 日本語意味テキスト
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(50, 45, 40);
+  const jpLines = doc.splitTextToSize(cand.jp, rightW - 2);
+  doc.text(jpLines, rightX + 1, 70);
+
+  // 意味ラベル（英語）
+  const enLabelY = 70 + jpLines.length * 5.5 + 4;
+  doc.setFillColor(242, 237, 228);
+  doc.roundedRect(rightX, enLabelY, rightW, 5.5, 1, 1, 'F');
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(107, 101, 96);
+  doc.text('MEANING IN ENGLISH', rightX + rightW / 2, enLabelY + 4, { align: 'center' });
+
+  // 英語意味テキスト
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(50, 45, 40);
+  const enLines = doc.splitTextToSize(cand.en, rightW - 2);
+  doc.text(enLines, rightX + 1, enLabelY + 11);
+
+  // 安全バッジ
+  doc.setFillColor(237, 246, 239);
+  doc.roundedRect(rightX, 128, 28, 7, 2, 2, 'F');
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(42, 107, 58);
+  doc.text('✓ AUSPICIOUS', rightX + 14, 133, { align: 'center' });
+
+  // 下部：説明テキスト
+  doc.setFillColor(255, 255, 255);
+  doc.roundedRect(margin, 148, contentW, 38, 4, 4, 'F');
+  doc.setDrawColor(220, 215, 210);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(margin, 148, contentW, 38, 4, 4, 'S');
+
+  doc.setFontSize(7.5);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(26, 23, 20);
+  doc.text('About Your Kanji Name', margin + 6, 156);
+
+  doc.setFontSize(7.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(107, 101, 96);
+  const aboutText = `This kanji name was specially selected to phonetically match your name while carrying beautiful and auspicious meanings. In Japanese culture, the choice of kanji characters reflects not only sound but also the wishes and hopes for the person's future. Each character has been carefully chosen to bring positive energy and good fortune.`;
+  const aboutLines = doc.splitTextToSize(aboutText, contentW - 12);
+  doc.text(aboutLines, margin + 6, 163);
+
+  // フッター
+  doc.setFillColor(26, 23, 20);
+  doc.rect(0, H - 18, W, 18, 'F');
+  doc.setTextColor(150, 140, 130);
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Kanji Converter AI  ·  Asakusa, Tokyo', margin, H - 9);
+  doc.text('navigatorsspc0111-maker.github.io/kanji', W - margin, H - 9, { align: 'right' });
+
+  // フッター赤ライン
+  doc.setFillColor(192, 57, 43);
+  doc.rect(0, H - 18, W, 1.5, 'F');
+
+  // 保存
+  const filename = `kanji_${name.replace(/\s+/g,'_')}_${kanji}.pdf`;
+  doc.save(filename);
+  showToast('PDFを保存しました ✓');
 }
 
 function showError(msg) {
@@ -740,7 +943,6 @@ function refill(name) {
 function setLoading(on) {
   isLoading = on;
   const btn = document.getElementById('searchBtn');
-  const txt = document.getElementById('btnText');
   if (on) {
     btn.disabled = true;
     btn.innerHTML = '<div class="spinner"></div>';
