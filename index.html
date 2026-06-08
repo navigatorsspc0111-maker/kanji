@@ -741,7 +741,7 @@ function buildCertificateHTML(name, kanji, cand) {
 
     <!-- ヘッダー -->
     <div style="background:#1a1714; color:#faf8f4; padding:48px 56px 40px; border-bottom:8px solid #c0392b;">
-      <div style="font-size:22px; font-weight:800; letter-spacing:1px;">KANJI CONVERTER AI &nbsp;·&nbsp; ASAKUSA, TOKYO</div>
+      <div style="font-size:22px; font-weight:800; letter-spacing:1px;">KANJI NAME ART &nbsp;·&nbsp; ASAKUSA, TOKYO</div>
       <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:14px;">
         <div style="font-size:13px; color:#b4aaa0;">Your Japanese Kanji Name Certificate</div>
         <div style="font-size:13px; color:#96887a;">${dateStr}</div>
@@ -779,7 +779,7 @@ function buildCertificateHTML(name, kanji, cand) {
 
     <!-- フッター -->
     <div style="position:absolute; bottom:0; left:0; right:0; background:#1a1714; border-top:6px solid #c0392b; padding:24px 56px; display:flex; justify-content:space-between; align-items:center;">
-      <div style="font-size:13px; color:#96887a;">Kanji Converter AI &nbsp;·&nbsp; Asakusa, Tokyo</div>
+      <div style="font-size:13px; color:#96887a;">Kanji Name Art &nbsp;·&nbsp; Asakusa, Tokyo</div>
       <div style="font-size:13px; color:#96887a;">navigatorsspc0111-maker.github.io/kanji</div>
     </div>
   </div>`;
@@ -815,6 +815,8 @@ async function exportPDF(name) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
     doc.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+    // 開いた時にページ幅いっぱいにフィット表示
+    try { doc.setDisplayMode('fullwidth', 'continuous'); } catch(e) {}
 
     const filename = `kanji_${name.replace(/\s+/g,'_')}_${kanji}.pdf`;
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
