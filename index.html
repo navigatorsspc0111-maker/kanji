@@ -475,6 +475,7 @@ let inputMode = 'roma';
 let history = [];
 let selectedKanjis = {};
 let selectedCandidates = {}; // 選択中の候補データを保持
+let allCandidates = {}; // 名前ごとの全候補リストを保持
 let isLoading = false;
 
 // ── Input Mode ──
@@ -610,6 +611,7 @@ async function convert() {
     const gLabel = gender==='m'?'男性 Male':gender==='f'?'女性 Female':'どちらでも Any';
     selectedKanjis[raw] = parsed.candidates[0].kanji;
     selectedCandidates[raw] = parsed.candidates[0]; // 最初の候補を保持
+    allCandidates[raw] = parsed.candidates; // 全候補を保持
     document.getElementById('resultArea').innerHTML = renderResult(raw, parsed.candidates, gLabel);
     updateHistory(raw, parsed.candidates[0].kanji);
 
@@ -635,7 +637,7 @@ function renderLoading(name) {
 function renderResult(name, candidates, gLabel) {
   const nameId = encodeURIComponent(name);
   const cands = candidates.map((c, i) => `
-    <div class="candidate ${i===0?'selected':''}" onclick="selectKanji('${name}',${i},this,'${encodeURIComponent(JSON.stringify(c))}')" data-kanji="${c.kanji}">
+    <div class="candidate ${i===0?'selected':''}" onclick="selectKanji('${name}',${i},this)" data-kanji="${c.kanji}">
       <div class="cand-top">
         <div>
           <div class="cand-kanji">${c.kanji}</div>
@@ -687,15 +689,14 @@ function renderResult(name, candidates, gLabel) {
   </div>`;
 }
 
-function selectKanji(name, idx, el, encodedCand) {
+function selectKanji(name, idx, el) {
   const kanji = el.dataset.kanji;
   selectedKanjis[name] = kanji;
 
-  // 候補データを更新
-  try {
-    const cand = JSON.parse(decodeURIComponent(encodedCand));
-    selectedCandidates[name] = cand;
-  } catch(e) {}
+  // 候補データをインデックスで更新
+  if (allCandidates[name] && allCandidates[name][idx]) {
+    selectedCandidates[name] = allCandidates[name][idx];
+  }
 
   const nameId = encodeURIComponent(name);
   const mainEl = document.getElementById('mainKanji_'+nameId);
