@@ -754,29 +754,32 @@ function buildCertificateHTML(name, kanji, cand) {
     </div>
 
     <!-- メインカード -->
-    <div style="margin:44px 48px 0; background:#fff; border:1px solid #dcd7d2; border-radius:16px; display:flex; overflow:hidden;">
+    <div style="margin:36px 48px 0; background:#fff; border:1px solid #dcd7d2; border-radius:16px; display:flex; overflow:hidden;">
       <!-- 漢字エリア -->
-      <div style="width:280px; background:#faf8f4; padding:40px 20px; text-align:center; display:flex; flex-direction:column; justify-content:center; align-items:center; border-right:1px solid #dcd7d2;">
-        <div style="font-size:13px; color:#b0aba6; letter-spacing:3px; margin-bottom:24px;">KANJI</div>
+      <div style="width:280px; background:#faf8f4; padding:32px 20px; text-align:center; display:flex; flex-direction:column; justify-content:center; align-items:center; border-right:1px solid #dcd7d2;">
+        <div style="font-size:13px; color:#b0aba6; letter-spacing:3px; margin-bottom:20px;">KANJI</div>
         <div style="font-size:${kFontSize}px; font-weight:800; color:#1a1714; letter-spacing:6px; line-height:1.1;">${kanji}</div>
-        <div style="font-size:15px; color:#b0aba6; margin-top:24px; letter-spacing:1px;">${cand.reading||''}</div>
+        <div style="font-size:15px; color:#b0aba6; margin-top:20px; letter-spacing:1px;">${cand.reading||''}</div>
       </div>
       <!-- 意味エリア -->
-      <div style="flex:1; padding:36px 32px;">
-        <div style="background:#f2ede4; border-radius:6px; padding:8px; text-align:center; font-size:12px; font-weight:700; color:#6b6560; letter-spacing:2px;">MEANING IN JAPANESE / 日本語の意味</div>
-        <div style="font-size:16px; color:#322d28; line-height:1.8; margin:14px 4px 28px;">${cand.jp}</div>
-        <div style="background:#f2ede4; border-radius:6px; padding:8px; text-align:center; font-size:12px; font-weight:700; color:#6b6560; letter-spacing:2px;">MEANING IN ENGLISH</div>
-        <div style="font-size:16px; color:#322d28; line-height:1.7; margin:14px 4px 28px;">${cand.en}</div>
+      <div style="flex:1; padding:30px 30px;">
+        <div style="background:#f2ede4; border-radius:6px; padding:7px; text-align:center; font-size:12px; font-weight:700; color:#6b6560; letter-spacing:2px;">MEANING IN JAPANESE / 日本語の意味</div>
+        <div style="font-size:15px; color:#322d28; line-height:1.75; margin:12px 4px 22px;">${cand.jp}</div>
+        <div style="background:#f2ede4; border-radius:6px; padding:7px; text-align:center; font-size:12px; font-weight:700; color:#6b6560; letter-spacing:2px;">MEANING IN ENGLISH</div>
+        <div style="font-size:15px; color:#322d28; line-height:1.6; margin:12px 4px 22px;">${cand.en}</div>
         <div style="display:inline-block; background:#edf6ef; border-radius:8px; padding:8px 18px; font-size:13px; font-weight:700; color:#2a6b3a; letter-spacing:1px;">✓ AUSPICIOUS / 縁起の良い漢字</div>
       </div>
     </div>
 
     <!-- 説明カード -->
-    <div style="margin:32px 48px 0; background:#fff; border:1px solid #dcd7d2; border-radius:16px; padding:32px 36px;">
-      <div style="font-size:16px; font-weight:800; color:#1a1714; margin-bottom:14px;">About Your Kanji Name</div>
-      <div style="font-size:14px; color:#6b6560; line-height:1.85;">This kanji name was specially selected to phonetically match your name while carrying beautiful and auspicious meanings. In Japanese culture, the choice of kanji characters reflects not only sound but also the wishes and hopes for the person's future. Each character has been carefully chosen to bring positive energy and good fortune.</div>
-      <div style="font-size:14px; color:#6b6560; line-height:1.85; margin-top:14px;">この漢字のお名前は、あなたのお名前の音に合わせて選ばれ、美しく縁起の良い意味を込めています。日本では、漢字の選び方は音だけでなく、その人の未来への願いや希望を映し出すものとされています。</div>
+    <div style="margin:24px 48px 0; background:#fff; border:1px solid #dcd7d2; border-radius:16px; padding:26px 36px;">
+      <div style="font-size:16px; font-weight:800; color:#1a1714; margin-bottom:12px;">About Your Kanji Name</div>
+      <div style="font-size:13px; color:#6b6560; line-height:1.75;">This kanji name was specially selected to phonetically match your name while carrying beautiful and auspicious meanings. In Japanese culture, the choice of kanji characters reflects not only sound but also the wishes and hopes for the person's future. Each character has been carefully chosen to bring positive energy and good fortune.</div>
+      <div style="font-size:13px; color:#6b6560; line-height:1.75; margin-top:12px;">この漢字のお名前は、あなたのお名前の音に合わせて選ばれ、美しく縁起の良い意味を込めています。日本では、漢字の選び方は音だけでなく、その人の未来への願いや希望を映し出すものとされています。</div>
     </div>
+
+    <!-- フッターとの余白確保 -->
+    <div style="height:120px;"></div>
 
     <!-- フッター -->
     <div style="position:absolute; bottom:0; left:0; right:0; background:#1a1714; border-top:6px solid #c0392b; padding:22px 56px; display:flex; justify-content:space-between; align-items:center;">
@@ -818,8 +821,8 @@ async function exportPDF(name) {
 
     const imgData = canvas.toDataURL('image/jpeg', 0.92);
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
-    doc.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+    const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a5' });
+    doc.addImage(imgData, 'JPEG', 0, 0, 148, 210);
     // 開いた時にページ幅いっぱいにフィット表示
     try { doc.setDisplayMode('fullwidth', 'continuous'); } catch(e) {}
 
